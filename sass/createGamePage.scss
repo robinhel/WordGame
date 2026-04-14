@@ -1,0 +1,9 @@
+.createGame {
+    display: flex; 
+    flex-direction: column; 
+    align-items: center;
+    
+    #welcomeText {
+        color: rgb(182, 57, 57);
+    }
+}

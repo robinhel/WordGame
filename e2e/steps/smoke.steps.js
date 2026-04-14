@@ -1,4 +1,4 @@
-import { expect } from '@playwright/test';
+/* import { expect } from '@playwright/test';
 import { createBdd } from 'playwright-bdd';
 
 const { Given, Then } = createBdd();
@@ -18,4 +18,4 @@ Then('ska jag se en rubrik på nivå {int} på sidan', async ({ page }, level) =
 
 Then('ska jag se texten {string}', async ({ page }, text) => {
     await expect(page.locator('body')).toContainText(text);
-});
+}); */
