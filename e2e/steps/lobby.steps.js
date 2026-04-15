@@ -4,13 +4,14 @@ import { createBdd } from 'playwright-bdd';
 
 const { Given, When, Then } = createBdd();
 
+
+// -------- LOBBY TESTING ---------------
 Given('I am on the start page', async ({page}) => {
     await page.goto('http://localhost:5173');
 })
 
 When('I enter the name {string}', async ({page}, name) => {
-        const input = page.locator('.username');
-        await input.fill(name);
+    await page.getByPlaceholder('Skriv in ditt namn...').fill(name)
 })
 
 When ('I click on {string}', async ({page}, buttonText) => {
@@ -24,4 +25,20 @@ Then('I should be redirected to create-game url', async ({page}) => {
 Then('I should see {string}', async ({page}, welcomeText) => {
     const message = page.getByText(welcomeText);
     await expect(message).toBeVisible();
+})
+
+// ---------- INAKTIVERING/AKTIVERING KNAPP TEST ----------
+
+Then('the {string} button should be disabled', async ({ page }, buttonText) => {
+    const button = page.getByRole('button', { name: buttonText });
+    await expect(button).toBeDisabled();
+}) 
+
+When('I type {string} into the name field', async({ page }, name) => {
+    await page.getByPlaceholder('Skriv in ditt namn...').fill(name)
+})
+
+Then('the {string} button should be enabled', async ({ page }, buttonText) => {
+    const button = page.getByRole('button', { name: buttonText })
+    await expect(button).toBeEnabled()
 })

@@ -8,7 +8,10 @@ export default function StartPage() {
   const navigate = useNavigate();
 
   const createGame = () => {
-    navigate('/create-game', {state: {username : username}})
+
+    const randomCode = Math.random().toString(36).substring(2, 7).toUpperCase();
+
+    navigate(`/create-game/${randomCode}`, {state: {username : username}})
   }
 
   const joinGame = () => {
