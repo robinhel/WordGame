@@ -8,11 +8,11 @@ export default function StartPage() {
   const navigate = useNavigate();
 
   const createGame = () => {
-    navigate('/create-game')
+    navigate('/create-game', {state: {username : username}})
   }
 
   const joinGame = () => {
-    navigate('/join-game')
+    navigate('/join-game', {state: {username : username}})
   }
 
   // SKRIV TEST TILL DENNA 
