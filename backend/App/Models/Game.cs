@@ -8,6 +8,16 @@ public class Game
 
     public List<Player> Players { get; set; } = new();
 
+    public string CurrentWord { get; set; } = "is";
+
+    public List<string> UsedWords { get; set; } = new();
+
+    public int CurrentTurnIndex { get; set; }
+
+    public bool IsStarted { get; set; } = false;
+
+    public bool IsFinished { get; set; } = false;
+
     public Game()
     {
         Id = GenerateGameId();

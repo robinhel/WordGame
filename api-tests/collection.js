@@ -1,5 +1,6 @@
-import getHello from './requests/get-hello.js';
-import greetName from './requests/greet-name.js';
+import createGame from './requests/create-game.js';
+import getGame from './requests/get-game.js';
+import startGame from './requests/start-game.js';
 
 export const name = 'FromScratchAPI';
 
@@ -8,6 +9,7 @@ export function preRequest() {
 }
 
 export const order = [
-    getHello,
-    greetName
+    createGame,
+    getGame,
+    startGame
 ];
