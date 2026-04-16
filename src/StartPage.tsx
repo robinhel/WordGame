@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import '../sass/startPage.scss'
 
 
 export default function StartPage() {
@@ -20,14 +21,6 @@ export default function StartPage() {
     if (roomCode.length >= 4)
     {
       navigate(`/join-game/${roomCode.toUpperCase()}`, {state: {username : username}})
-    }
-  }
-
-  // SKRIV TEST TILL DENNA 
-  const confirmName = () => {
-    if (username.length < 2) {
-      alert('Namnet måste vara minst 2 bokstäver')
-      return;
     }
   }
 
@@ -54,7 +47,6 @@ export default function StartPage() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
-        <button onClick={confirmName}> Bekräfta </button>
 
         <div className="gamebuttons">
           <button onClick={createGame}
