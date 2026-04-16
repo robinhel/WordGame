@@ -36,5 +36,11 @@ coverage/
 .idea/
 .vs/
 
-.playwright-report/
-playwright-report
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Playwright-BDD (Generated files)
+.features-gen/

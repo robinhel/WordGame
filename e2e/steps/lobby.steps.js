@@ -1,5 +1,4 @@
 import { expect } from '@playwright/test';
-import { getByText } from '@testing-library/react';
 import { createBdd } from 'playwright-bdd';
 
 const { Given, When, Then } = createBdd();
@@ -19,14 +18,26 @@ When ('I click on {string}', async ({page}, buttonText) => {
 })
 
 Then('I should be redirected to create-game url', async ({page}) => {
-    await expect(page).toHaveURL('http://localhost:5173/create-game')
+    await expect(page).toHaveURL(/.*localhost:5173\/create-game.*/)
 })
 
-Then('I should see {string}', async ({page}, welcomeText) => {
-    const message = page.getByText(welcomeText);
+Then('I should see {string}', async ({page}, text) => {
+    const message = page.getByText(text);
     await expect(message).toBeVisible();
 })
 
+Then('I should see the roomcode input field', async ({page}) => {
+    const input = page.getByPlaceholder('Ange rumskod...')
+    await expect(input).toBeVisible();
+})
+
+When('I type {string} into the roomcode field', async ({page}, code) => {
+    await page.getByPlaceholder('Ange rumskod...').fill(code)
+})
+
+Then('I should be redirected to join-game url', async ({ page }) => {
+    await expect(page).toHaveURL(/localhost:5173\/join-game\/.*/);
+});
 // ---------- INAKTIVERING/AKTIVERING KNAPP TEST ----------
 
 Then('the {string} button should be disabled', async ({ page }, buttonText) => {
