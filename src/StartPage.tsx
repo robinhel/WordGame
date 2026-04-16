@@ -5,24 +5,51 @@ import '../sass/startPage.scss'
 
 export default function StartPage() {
   const [message, setMessage] = useState('');
+  const [error, setError] = useState<string | null> (null);
   const [username, setUsername] = useState('');
   const [roomCode, setRoomCode] = useState('');
   const [showJoinInput, setShowJoinInput] = useState(false);
   const navigate = useNavigate();
 
-  const createGame = () => {
+  const createGame = async () => {
 
-    const randomCode = Math.random().toString(36).substring(2, 7).toUpperCase();
-
-    navigate(`/create-game/${randomCode}`, {state: {username : username}})
-  }
-
-  const joinGame = () => {
-    if (roomCode.length >= 4)
+    try
     {
-      navigate(`/join-game/${roomCode.toUpperCase()}`, {state: {username : username}})
+      const response = await fetch ('/create', { method: 'POST'})
+      const data = await response.json();
+
+      navigate(`/create-game/${data.id}`, {state: {username : username}})
+    }
+    catch(error)
+    {
+      console.error("Kunde inte skapa spel", error);
     }
   }
+
+  const joinGame = async () => {
+
+    setError(null);
+    if (roomCode.length !== 6) {
+    setError("Rumskoden måste vara exakt 6 tecken.");
+    return;
+    }
+
+    try{
+      const response = await fetch(`/game/${roomCode.toUpperCase()}`);
+
+      if (response.ok)
+      {
+        navigate(`/join-game/${roomCode.toUpperCase()}`, {state: {username : username}})
+      } else{
+        setError('Hittade inget spel med den angivna koden.');
+      }
+    }
+    catch(error)
+    {
+      setError('Kunde inte ansluta till servern.')
+    }
+    }
+
 
 
   useEffect(() => {
@@ -69,8 +96,11 @@ export default function StartPage() {
           value={roomCode}
           onChange={(e) => setRoomCode(e.target.value)}
           />
+
+          {error && <p className="error-message">{error}</p>}
+
           <div className="gamebuttons">
-            <button onClick={joinGame} disabled={roomCode.length < 4}>
+            <button onClick={joinGame} disabled={roomCode.length < 6}>
             ANSLUT NU
             </button>
             <button onClick={() => setShowJoinInput(false)}>
