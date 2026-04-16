@@ -1,12 +1,19 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import StartPage from './StartPage.tsx'
+import GameTime from './GameTime.tsx'
+import Lobby from './Lobby.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <StartPage />
+      <Routes>
+        <Route path="/" element={<StartPage />} />
+        <Route path="/Game-Time" element={<GameTime /> } />
+        <Route path="/create-game/:gameCode" element={<Lobby isHost={true} />} />
+        <Route path="/join-game/:gameCode" element={<Lobby isHost={false} />} />
+      </Routes>
     </BrowserRouter>
   </StrictMode>,
 )
