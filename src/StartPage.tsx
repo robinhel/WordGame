@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import '../sass/createGamePage.scss';
+import '../sass/startPage.scss'
 
 
 export default function StartPage() {
@@ -82,7 +82,6 @@ export default function StartPage() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
-        <button onClick={confirmName}> Bekräfta </button>
 
         <div className="gamebuttons">
           <button onClick={createGame}

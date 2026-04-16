@@ -1,3 +1,5 @@
+
+
 using WordGame.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -50,6 +52,29 @@ Game? GetGame(string gameId)
     return games[gameId];
 }
 
+bool StartGame(string gameId, string startWord)
+{
+    if (!games.ContainsKey(gameId))
+        return false;
+
+    var game = games[gameId];
+
+    if (game.Players.Count < 2)
+        return false;
+
+    if (game.IsStarted)
+        return false;
+
+    startWord = startWord.ToLower();
+
+    game.IsStarted = true;
+    game.CurrentWord = startWord;
+    game.UsedWords.Add(startWord);
+    game.CurrentTurnIndex = 0;
+
+    return true;
+}
+
 
 
 
@@ -76,4 +101,16 @@ app.MapGet("/game/{id}", (string id) =>
         ? Results.NotFound()
         : Results.Ok(game);
 });
+
+app.MapPost("/Start/{id}", (string id, string word) =>
+{
+    var success = StartGame(id, word);
+
+    return success
+        ? Results.Ok()
+        : Results.BadRequest();
+});
+
 app.Run();
+
+public partial class Program { }

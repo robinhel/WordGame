@@ -9,9 +9,10 @@ export default function Lobby({ isHost }: { isHost: boolean }) {
 
         const location = useLocation();
 
-        const username = location.state?.username || 'Anonym spelare';
+  const username = location.state?.username || 'Anonym spelare';
+  
         const gameTime = () => {
-        navigate('/Game-Time')
+        navigate('/game-Time')
         }
 
         useEffect(() => {
