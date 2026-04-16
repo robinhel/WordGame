@@ -14,6 +14,23 @@ export default function Lobby({ isHost }: { isHost: boolean }) {
         navigate('/Game-Time')
         }
 
+        useEffect(() => {
+          const getGameStatus = async () => {
+            try{
+              const response = await fetch(`/game/${gameCode}`);
+              if (response.ok){
+                const gameData = await response.json();
+              } else{
+                console.error("Spelet existerar inte");
+              }
+            } catch (error)
+            {
+              console.error("Fel vid hämtningen av spelstatus.")
+            }
+          };
+          getGameStatus();
+        }, [gameCode])
+
     return (
     <>
       <div className='createGame'>
