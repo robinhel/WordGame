@@ -5,11 +5,14 @@ import { useParams ,useNavigate, useLocation } from 'react-router-dom'
 export default function Lobby({ isHost }: { isHost: boolean }) {
 
         const { gameCode } = useParams();
-
+        const navigate = useNavigate()
 
         const location = useLocation();
 
         const username = location.state?.username || 'Anonym spelare';
+        const gameTime = () => {
+        navigate('/Game-Time')
+        }
 
     return (
     <>
@@ -24,7 +27,7 @@ export default function Lobby({ isHost }: { isHost: boolean }) {
           <p>Spelare 2: {isHost ? 'Väntar på spelare att ansluta...' : username} ({isHost ? 'Väntar' : 'Redo'})</p>
         </div>
         {isHost && (
-        <button className="startButton">STARTA MATCH</button>
+        <button onClick={gameTime} className="startButton">STARTA MATCH</button>
         )}
 
         {!isHost && (
