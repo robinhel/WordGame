@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using WordGame.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,6 +6,17 @@ var app = builder.Build();
 
 var games = new Dictionary<string, Game>();
 
+Game game1 = new Game
+{
+    Id = "ABC123",
+    CurrentRound = 1,
+    Players = new List<Player>
+    {
+        new Player("Calle"),
+        new Player("Player 2")
+    }
+};
+games[game1.Id] = game1;
 
 Player AddPlayer(string gameId, string name)
 {

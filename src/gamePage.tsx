@@ -1,16 +1,35 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import '../sass/gamePage.scss';
+import { useLocation, useNavigate } from "react-router-dom";
 
+
+interface Player {
+    id: string
+    name: string
+}
 interface Game {
     id: string;
     currentRound: number;
-    players: string;
+    players: Player[];
 }
 
 export default function GamePage() {
     const { gameId } = useParams()
     const [game, setGame] = useState<Game | null>(null)
-    const [word, setWord] = useState('')
+    const [player1Word, setPlayer1Word] = useState('')
+    const [player2Word, setPlayer2Word] = useState('')
+    const [activePlayer, setActivePlayer] = useState<1 | 2>(1)
+    const navigate = useNavigate()
+    const [endGame, setEndGame] = useState(false)
+
+    const handleQuitClick = () => setEndGame(true)
+    const handleCancel = () => setEndGame(false)
+
+    const handleConfirmQuit = () => {
+        navigate('/')
+    }
+
 
 
     useEffect(() => {
@@ -25,19 +44,70 @@ export default function GamePage() {
             .catch(err => console.error(err))
     }, [gameId])
 
+
+    const submitWord = () => {
+        const word = activePlayer === 1 ? player1Word : player2Word
+
+        if (!word.trim()) return
+
+        console.log(`Player ${activePlayer} skickade:`, word)
+
+        if (activePlayer === 1) {
+            setPlayer1Word('')
+            setActivePlayer(2)
+        } else {
+            setPlayer2Word('')
+            setActivePlayer(1)
+        }
+    }
+
     // if (!game) return <h1>Laddar...</h1>
 
     return <>
-        <h1>WordGame</h1>
+        <div className='game'>
+            <button onClick={handleQuitClick} className="quit" >Avsluta spel</button>
+            {endGame && (
+                <div className="endGame">
+                    <h3>Vill du verkligen avsluta spelet?</h3>
+                    <button onClick={handleConfirmQuit}> Ja </button>
+                    <button onClick={handleCancel}> Nej </button>
+                </div>
+            )}
+            <h1>G A M E - T I M E</h1>
 
-        <input type="text" name="" id="" />
+
+            <p>Lobby: {game?.id}</p>
+            <p>Runda: {game?.currentRound}</p>
 
 
 
+            <div className='players'>
+                <div className='play1'>
+                    <p>{game?.players[0].name}</p>
+                    <input
+                        type="text"
+                        value={player1Word}
+                        onChange={(e) => setPlayer1Word(e.target.value)}
+                        disabled={activePlayer !== 1}
+                        placeholder="Player 1 skriver..."
+                    />
+                </div>
 
+                <div className='play2'>
+                    <p>{game?.players[1].name}</p>
+                    <input
+                        type="text"
+                        value={player2Word}
+                        onChange={(e) => setPlayer2Word(e.target.value)}
+                        disabled={activePlayer !== 2}
+                        placeholder="Player 2 skriver..."
+                    />
+                </div>
+            </div>
+            <button className='skicka' onClick={submitWord}>
+                Skicka
+            </button>
 
-        <p>Lobby: {game?.id}</p>
-        <p>Runda: {game?.currentRound}</p>
-        <p>spelare: {game?.players}</p>
+        </div>
     </>
 }
