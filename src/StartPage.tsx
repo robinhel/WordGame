@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom'
 export default function StartPage() {
   const [message, setMessage] = useState('');
   const [username, setUsername] = useState('');
+  const [roomCode, setRoomCode] = useState('');
+  const [showJoinInput, setShowJoinInput] = useState(false);
   const navigate = useNavigate();
 
   const createGame = () => {
@@ -15,7 +17,10 @@ export default function StartPage() {
   }
 
   const joinGame = () => {
-    navigate('/join-game', {state: {username : username}})
+    if (roomCode.length >= 4)
+    {
+      navigate(`/join-game/${roomCode.toUpperCase()}`, {state: {username : username}})
+    }
   }
 
   // SKRIV TEST TILL DENNA 
@@ -40,7 +45,8 @@ export default function StartPage() {
       <div className='startpage'>
 
         <h1 className="title">WordGame</h1>
-
+        {!showJoinInput && (
+          <>
         <input
           className="username"
           type="text"
@@ -54,12 +60,33 @@ export default function StartPage() {
           <button onClick={createGame}
             disabled={username.length < 2}>
             SKAPA SPEL</button>
-          <button onClick={joinGame}
+          <button onClick={() => setShowJoinInput(true)}
             disabled={username.length < 2}>
-            JOINA SPEL
+            GÅ MED I SPEL
           </button>
-        </div>
-        {message && <p>{message}</p>}
+        </div>   
+          </>
+        )}
+
+        {showJoinInput && (
+          <>
+          <input
+          className='roomcode-input'
+          type='text'
+          placeholder='Ange rumskod...'
+          value={roomCode}
+          onChange={(e) => setRoomCode(e.target.value)}
+          />
+          <div className="gamebuttons">
+            <button onClick={joinGame} disabled={roomCode.length < 4}>
+            ANSLUT NU
+            </button>
+            <button onClick={() => setShowJoinInput(false)}>
+              GÅ TILLBAKA
+            </button>
+          </div>
+          </>
+        )}
       </div>
     </>
   );
