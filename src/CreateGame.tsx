@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 
 
-
 CreateGame.route = {
   path: '/create-game',
   index: 2
@@ -11,12 +10,15 @@ CreateGame.route = {
 
 export default function CreateGame() {
 
-        const location = useLocation();
+  const location = useLocation();
+  const navigate = useNavigate()
+  const username = location.state?.username || 'Anonym spelare';
 
-        const username = location.state?.username || 'Anonym spelare';
-
-
-
+  const gameTime = () => {
+    navigate('/Game-Time')
+    }
+  
+   
 
     return (
     <>
@@ -29,7 +31,7 @@ export default function CreateGame() {
             <p>Player 1 {username} - Status : Joined </p>
             <p>Player 2 - Status : Waiting</p>
         </div>
-        <button className="startButton">
+          <button onClick={gameTime} className="startButton">
             STARTA MATCH
         </button>
       </div>
