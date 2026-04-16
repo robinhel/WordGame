@@ -72,6 +72,70 @@ public class ApiTests : IClassFixture<WebApplicationFactory<Program>>
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    [Fact]
+    public async Task MakeMove_ShouldReturnOk_WhenMoveIsValid()
+    {
+        var createResponse = await _client.PostAsync("/create", null);
+        var createBody = await createResponse.Content.ReadFromJsonAsync<CreateGameResponse>();
+
+        Assert.NotNull(createBody);
+
+        var joinHostResponse = await _client.PostAsync($"/Join/{createBody!.Id}?name=Anna", null);
+        var joinGuestResponse = await _client.PostAsync($"/Join/{createBody.Id}?name=Bosse", null);
+
+        Assert.Equal(HttpStatusCode.OK, joinHostResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, joinGuestResponse.StatusCode);
+
+        var gameBeforeStartResponse = await _client.GetAsync($"/game/{createBody.Id}");
+        var gameBeforeStart = await gameBeforeStartResponse.Content.ReadFromJsonAsync<GameDto>();
+
+        Assert.NotNull(gameBeforeStart);
+        Assert.Equal(2, gameBeforeStart!.Players.Count);
+
+        var firstPlayerId = gameBeforeStart.Players[0].Id;
+
+        var startResponse = await _client.PostAsync($"/Start/{createBody.Id}?word=hej", null);
+        Assert.Equal(HttpStatusCode.OK, startResponse.StatusCode);
+
+        var moveResponse = await _client.PostAsync($"/Move/{createBody.Id}?playerId={firstPlayerId}&word=jord", null);
+        Assert.Equal(HttpStatusCode.OK, moveResponse.StatusCode);
+
+        var gameAfterMoveResponse = await _client.GetAsync($"/game/{createBody.Id}");
+        var gameAfterMove = await gameAfterMoveResponse.Content.ReadFromJsonAsync<GameDto>();
+
+        Assert.NotNull(gameAfterMove);
+        Assert.Equal("jord", gameAfterMove!.CurrentWord);
+        Assert.Contains("hej", gameAfterMove.UsedWords);
+        Assert.Contains("jord", gameAfterMove.UsedWords);
+        Assert.Equal(1, gameAfterMove.CurrentTurnIndex);
+    }
+
+    [Fact]
+    public async Task MakeMove_ShouldReturnBadRequest_WhenWrongPlayerTriesToMove()
+    {
+        var createResponse = await _client.PostAsync("/create", null);
+        var createBody = await createResponse.Content.ReadFromJsonAsync<CreateGameResponse>();
+
+        Assert.NotNull(createBody);
+
+        await _client.PostAsync($"/Join/{createBody!.Id}?name=Anna", null);
+        await _client.PostAsync($"/Join/{createBody.Id}?name=Bosse", null);
+
+        var gameBeforeStartResponse = await _client.GetAsync($"/game/{createBody.Id}");
+        var gameBeforeStart = await gameBeforeStartResponse.Content.ReadFromJsonAsync<GameDto>();
+
+        Assert.NotNull(gameBeforeStart);
+        Assert.Equal(2, gameBeforeStart!.Players.Count);
+
+        var secondPlayerId = gameBeforeStart.Players[1].Id;
+
+        var startResponse = await _client.PostAsync($"/Start/{createBody.Id}?word=hej", null);
+        Assert.Equal(HttpStatusCode.OK, startResponse.StatusCode);
+
+        var moveResponse = await _client.PostAsync($"/Move/{createBody.Id}?playerId={secondPlayerId}&word=jord", null);
+        Assert.Equal(HttpStatusCode.BadRequest, moveResponse.StatusCode);
+    }
+
     private sealed class CreateGameResponse
     {
         public string Id { get; set; } = string.Empty;
@@ -82,6 +146,15 @@ public class ApiTests : IClassFixture<WebApplicationFactory<Program>>
     {
         public int CurrentRound { get; set; }
         public bool IsStarted { get; set; }
+        public string CurrentWord { get; set; } = string.Empty;
         public List<string> UsedWords { get; set; } = new();
+        public int CurrentTurnIndex { get; set; }
+        public List<PlayerDto> Players { get; set; } = new();
+    }
+
+    private sealed class PlayerDto
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
     }
 }
