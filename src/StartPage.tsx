@@ -51,14 +51,6 @@ export default function StartPage() {
     }
 
 
-  // SKRIV TEST TILL DENNA 
-  const confirmName = () => {
-    if (username.length < 2) {
-      alert('Namnet måste vara minst 2 bokstäver')
-      return;
-    }
-  }
-
 
   useEffect(() => {
     (async () => {
