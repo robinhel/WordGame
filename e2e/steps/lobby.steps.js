@@ -26,6 +26,18 @@ Then('I should see {string}', async ({page}, text) => {
     await expect(message).toBeVisible();
 })
 
+Then('I should see the roomcode input field', async ({page}) => {
+    const input = page.getByPlaceholder('Ange rumskod...')
+    await expect(input).toBeVisible();
+})
+
+When('I type {string} into the roomcode field', async ({page}, code) => {
+    await page.getByPlaceholder('Ange rumskod...').fill(code)
+})
+
+Then('I should be redirected to join-game url', async ({ page }) => {
+    await expect(page).toHaveURL(/localhost:5173\/join-game\/.*/);
+});
 // ---------- INAKTIVERING/AKTIVERING KNAPP TEST ----------
 
 Then('the {string} button should be disabled', async ({ page }, buttonText) => {

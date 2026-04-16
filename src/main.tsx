@@ -10,7 +10,7 @@ createRoot(document.getElementById('root')!).render(
       <Routes>
         <Route path="/" element={<StartPage />} />
         <Route path="/create-game/:gameCode" element={<Lobby isHost={true} />} />
-        <Route path="/join-game" element={<Lobby isHost={false} />} />
+        <Route path="/join-game/:gameCode" element={<Lobby isHost={false} />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,

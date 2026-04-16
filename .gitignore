@@ -35,3 +35,12 @@ coverage/
 # Rider / VS
 .idea/
 .vs/
+
+# Playwright & Testing
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Playwright-BDD (Generated files)
+.features-gen/

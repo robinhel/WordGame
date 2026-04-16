@@ -13,3 +13,15 @@ Scenario: "Create game" button is locked until a name is entered
   Then the "SKAPA SPEL" button should be disabled
   When I type "Nicklas" into the name field
   Then the "SKAPA SPEL" button should be enabled
+
+
+  Scenario: User joins a game
+  Given I am on the start page
+  When I enter the name "Anna"
+  And I click on "GÅ MED I SPEL"
+  Then I should see the roomcode input field
+  When I type "ABCD" into the roomcode field
+  And I click on "ANSLUT NU"
+  Then I should be redirected to join-game url
+  And I should see "Välkommen Anna"
+  And I should see "Du är: Gäst"
