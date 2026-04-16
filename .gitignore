@@ -35,3 +35,6 @@ coverage/
 # Rider / VS
 .idea/
 .vs/
+
+.playwright-report/
+playwright-report

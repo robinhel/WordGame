@@ -57,7 +57,7 @@ Game? GetGame(string gameId)
 
 
 
-app.MapPost("/create", () =>
+app.MapPost("/api/create", () =>
 {
     var game = CreateGame();
 
@@ -68,7 +68,7 @@ app.MapPost("/create", () =>
     };
 });
 
-app.MapGet("/game/{id}", (string id) =>
+app.MapGet("/api/game/{id}", (string id) =>
 {
     var game = GetGame(id);
 

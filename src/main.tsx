@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import StartPage from './StartPage.tsx'
 import Lobby from './Lobby.tsx'
+import GamePage from './gamePage.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -11,6 +12,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="/" element={<StartPage />} />
         <Route path="/create-game/:gameCode" element={<Lobby isHost={true} />} />
         <Route path="/join-game" element={<Lobby isHost={false} />} />
+        <Route path="/game/:gameId" element={<GamePage />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>,
