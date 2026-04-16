@@ -1,0 +1,16 @@
+.container{
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 10px;
+
+  .display{
+    // border: 1px solid black;
+    border-bottom: 1px solid black;
+    padding: 20px 80px 20px;
+  }
+  .time {
+    text-decoration: 1px underline;
+    text-underline-offset: 10px;
+  }
+}
