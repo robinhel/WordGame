@@ -1,5 +1,9 @@
+<<<<<<< HEAD
+using System.Runtime.CompilerServices;
+=======
 
 
+>>>>>>> main
 using WordGame.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +11,17 @@ var app = builder.Build();
 
 var games = new Dictionary<string, Game>();
 
+Game game1 = new Game
+{
+    Id = "ABC123",
+    CurrentRound = 1,
+    Players = new List<Player>
+    {
+        new Player("Calle"),
+        new Player("Player 2")
+    }
+};
+games[game1.Id] = game1;
 
 Player AddPlayer(string gameId, string name)
 {
@@ -126,7 +141,7 @@ bool MakeMove(string gameId, string playerId, string word)
 
 
 
-app.MapPost("/create", () =>
+app.MapPost("/api/create", () =>
 {
     var game = CreateGame();
 
@@ -137,7 +152,7 @@ app.MapPost("/create", () =>
     };
 });
 
-app.MapGet("/game/{id}", (string id) =>
+app.MapGet("/api/game/{id}", (string id) =>
 {
     var game = GetGame(id);
 
