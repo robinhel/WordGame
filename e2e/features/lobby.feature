@@ -25,3 +25,17 @@ Scenario: "Create game" button is locked until a name is entered
   Then I should be redirected to join-game url
   And I should see "Välkommen Anna"
   And I should see "Du är: Gäst"
+
+  Scenario: User wants to quit the game but cancels
+    Given I am on the "game-Time" page
+    And I click on the button "Avsluta spel"
+    Then I should see "Vill du verkligen avsluta spelet?"
+    And I click "Nej"
+    Then I should still be at the game page
+
+  Scenario: User wants to quit the game and get redirected to the start page
+    Given I am on the "game-Time" page
+    And I click on the button "Avsluta spel"
+    Then I should see "Vill du verkligen avsluta spelet?"
+    And I click "Ja"
+    Then I should be redirected to the start page 
