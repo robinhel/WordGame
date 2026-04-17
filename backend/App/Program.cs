@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 using System.Runtime.CompilerServices;
+=======
+
+
+>>>>>>> main
 using WordGame.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -62,6 +67,73 @@ Game? GetGame(string gameId)
     return games[gameId];
 }
 
+bool StartGame(string gameId, string startWord)
+{
+    if (!games.ContainsKey(gameId))
+        return false;
+
+    var game = games[gameId];
+
+    if (game.Players.Count < 2)
+        return false;
+
+    if (game.IsStarted)
+        return false;
+
+    startWord = startWord.ToLower();
+
+    game.IsStarted = true;
+    game.CurrentWord = startWord;
+    game.UsedWords.Add(startWord);
+    game.CurrentTurnIndex = 0;
+
+    return true;
+}
+
+bool MakeMove(string gameId, string playerId, string word)
+{
+    if (!games.ContainsKey(gameId))
+        return false;
+
+    var game = games[gameId];
+
+    if (!game.IsStarted || game.IsFinished)
+        return false;
+
+    if (game.Players.Count < 2)
+        return false;
+
+    if (string.IsNullOrWhiteSpace(word))
+        return false;
+
+    var currentPlayer = game.Players[game.CurrentTurnIndex];
+
+    if (currentPlayer.Id != playerId)
+        return false;
+
+    word = word.Trim().ToLowerInvariant();
+
+    if (game.UsedWords.Contains(word))
+        return false;
+
+    var expectedStart = game.CurrentWord[^1];
+
+    // New word must begin with last letter of current word.
+    if (word[0] != expectedStart)
+        return false;
+
+    // Apply move and advance turn.
+    game.CurrentWord = word;
+    game.UsedWords.Add(word);
+    game.CurrentTurnIndex = (game.CurrentTurnIndex + 1) % game.Players.Count;
+
+    // Increase round when turn cycles back to the first player.
+    if (game.CurrentTurnIndex == 0)
+        game.CurrentRound++;
+
+    return true;
+}
+
 
 
 
@@ -88,4 +160,34 @@ app.MapGet("/api/game/{id}", (string id) =>
         ? Results.NotFound()
         : Results.Ok(game);
 });
+
+app.MapPost("/Start/{id}", (string id, string word) =>
+{
+    var success = StartGame(id, word);
+
+    return success
+        ? Results.Ok()
+        : Results.BadRequest();
+});
+
+app.MapPost("/Join/{id}", (string id, string name) =>
+{
+    var success = JoinGame(id, name);
+
+    return success
+        ? Results.Ok()
+        : Results.BadRequest();
+});
+
+app.MapPost("/Move/{id}", (string id, string playerId, string word) =>
+{
+    var success = MakeMove(id, playerId, word);
+
+    return success
+        ? Results.Ok()
+        : Results.BadRequest();
+});
+
 app.Run();
+
+public partial class Program { }
