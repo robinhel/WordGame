@@ -1,9 +1,5 @@
-<<<<<<< HEAD
-using System.Runtime.CompilerServices;
-=======
 
 
->>>>>>> main
 using WordGame.Models;
 
 var builder = WebApplication.CreateBuilder(args);
