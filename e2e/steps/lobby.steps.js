@@ -52,4 +52,28 @@ When('I type {string} into the name field', async({ page }, name) => {
 Then('the {string} button should be enabled', async ({ page }, buttonText) => {
     const button = page.getByRole('button', { name: buttonText })
     await expect(button).toBeEnabled()
+});
+// ------------- AVSLUTA SPEL TEST ---------------
+Given('I am on the {string} page', async ({ page }) => {
+     await expect(page).toHaveURL(/.*game-Time/);
+ })
+ When('I click on the button {string}', async ({ page }, buttonText) => {
+     await page.getByRole('button', { name: buttonText }).click();
+ })
+ 
+ When('I click {string}', async ({ page }, messageText) => {
+     await page.getByRole('button', { name: messageText }).click();
+ });
+ // Om användaren trycker nej 
+ Then('I should still be at the game page', async ({ page }) => {
+     await expect(page).toHaveURL(/.*game-Time/)
+ })
+    // Om användaren trycker ja
+ Then('I should be redirected to the start page', async ({ page }) => {
+    await expect(page).toHaveURL('http://localhost:5173/');
 })
+
+
+// getByRole letar efter en knapp-tagg
+// getByLabel letar efter ett fält som är kopplat till <label>
+// getByPlaceholder letar efter samma placeholder som du skriver in i paranteserna
