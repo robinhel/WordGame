@@ -1,11 +1,13 @@
 
 
 using WordGame.Models;
+using WordGame.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 
 var games = new Dictionary<string, Game>();
+var wordMatcher = SwedishWordMatcher.FromDefaultDictionary();
 
 Game game1 = new Game
 {
@@ -76,7 +78,8 @@ bool StartGame(string gameId, string startWord)
     if (game.IsStarted)
         return false;
 
-    startWord = startWord.ToLower();
+    if (!wordMatcher.TryMatch(startWord, out startWord))
+        return false;
 
     game.IsStarted = true;
     game.CurrentWord = startWord;
@@ -107,7 +110,8 @@ bool MakeMove(string gameId, string playerId, string word)
     if (currentPlayer.Id != playerId)
         return false;
 
-    word = word.Trim().ToLowerInvariant();
+    if (!wordMatcher.TryMatch(word, out word))
+        return false;
 
     if (game.UsedWords.Contains(word))
         return false;
@@ -182,6 +186,18 @@ app.MapPost("/Move/{id}", (string id, string playerId, string word) =>
     return success
         ? Results.Ok()
         : Results.BadRequest();
+});
+
+app.MapGet("/api/words/match/{word}", (string word) =>
+{
+    var success = wordMatcher.TryMatch(word, out var matchedWord);
+
+    return Results.Ok(new
+    {
+        input = word,
+        matchedWord = success ? matchedWord : null,
+        isMatch = success
+    });
 });
 
 app.Run();
