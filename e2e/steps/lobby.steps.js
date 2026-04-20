@@ -38,7 +38,7 @@ When('I type {string} into the roomcode field', async ({page}, code) => {
 Then('I should be redirected to join-game url', async ({ page }) => {
     await expect(page).toHaveURL(/localhost:5173\/join-game\/.*/);
 });
-// ---------- INAKTIVERING/AKTIVERING KNAPP TEST ----------
+// ---------- INAKTIVERING/AKTIVERING KNAPP TEST -----------
 
 Then('the {string} button should be disabled', async ({ page }, buttonText) => {
     const button = page.getByRole('button', { name: buttonText });
@@ -73,7 +73,8 @@ Given('I am on the {string} page', async ({ page }, pageName) => {
     // Om användaren trycker ja
  Then('I should be redirected to the start page', async ({ page }) => {
     await expect(page).toHaveURL('http://localhost:5173/');
-})
+ })
+
 
 
 // getByRole letar efter en knapp-tagg
