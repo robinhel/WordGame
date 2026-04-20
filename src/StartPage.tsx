@@ -17,6 +17,8 @@ export default function StartPage() {
       const response = await fetch('/api/create', { method: 'POST' });
       const data = await response.json();
 
+      await fetch(`/api/Join/${data.id}?name=${username}`, { method: 'POST' });
+
       navigate(`/create-game/${data.id}`, { state: { username: username } });
     }
     catch (error) {
@@ -33,7 +35,9 @@ export default function StartPage() {
     }
 
     try {
-      const response = await fetch(`/api/game/${roomCode.toUpperCase()}`);
+      const response = await fetch(`/api/Join/${roomCode.toUpperCase()}?name=${username}`, {
+        method: 'POST'
+      });
 
       if (response.ok) {
         navigate(`/join-game/${roomCode.toUpperCase()}`, { state: { username: username } });

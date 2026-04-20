@@ -6,11 +6,7 @@ public class Game
 
     public int CurrentRound { get; set; }
 
-    public List<Player> Players { get; set; } = new()
-{
-    new Player("Player 1"),
-    new Player("Player 2")
-};
+     public List<Player> Players { get; set; } = new List<Player>();
 
     public string CurrentWord { get; set; } = "is";
 
