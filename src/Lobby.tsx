@@ -12,7 +12,7 @@ export default function Lobby({ isHost }: { isHost: boolean; }) {
   const username = location.state?.username || 'Anonym spelare';
 
   const gameTime = () => {
-    navigate('/api/game-Time');
+    navigate(`/game/${gameCode}`);
   };
 
   useEffect(() => {
