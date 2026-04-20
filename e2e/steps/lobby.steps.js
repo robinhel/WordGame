@@ -54,8 +54,10 @@ Then('the {string} button should be enabled', async ({ page }, buttonText) => {
     await expect(button).toBeEnabled()
 });
 // ------------- AVSLUTA SPEL TEST ---------------
-Given('I am on the {string} page', async ({ page }) => {
-     await expect(page).toHaveURL(/.*game-Time/);
+Given('I am on the {string} page', async ({ page }, pageName) => {
+    const testId = "123"
+    await page.goto(`http://localhost:5173/game/${testId}`)
+    await expect(page).toHaveURL(new RegExp('game'))
  })
  When('I click on the button {string}', async ({ page }, buttonText) => {
      await page.getByRole('button', { name: buttonText }).click();
@@ -66,7 +68,7 @@ Given('I am on the {string} page', async ({ page }) => {
  });
  // Om användaren trycker nej 
  Then('I should still be at the game page', async ({ page }) => {
-     await expect(page).toHaveURL(/.*game-Time/)
+     await expect(page).toHaveURL(/.*\/game\/.*/)
  })
     // Om användaren trycker ja
  Then('I should be redirected to the start page', async ({ page }) => {
