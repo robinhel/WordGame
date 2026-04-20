@@ -24,8 +24,9 @@ export default function Lobby({ isHost }: { isHost: boolean; }) {
 
   const [game, setGame] = useState<Game | null>(null)
 
-  const gameTime = () => {
-    navigate(`/game/${gameCode}`);
+  const gameTime = async () => {
+    const startWord = "lastbil";
+    await fetch(`/api/Start/${gameCode}?word=${startWord}`, { method: 'POST' }); // NY
   };
 
 
@@ -64,6 +65,10 @@ export default function Lobby({ isHost }: { isHost: boolean; }) {
       getGameStatus();
     });
 
+    connection.on("GameStarted", () => {
+      navigate(`/game/${gameCode}`, { state: { username: username } });
+    }) // NY
+
     return () => { connection.stop(); };
   }, [gameCode]);
 
@@ -86,7 +91,7 @@ export default function Lobby({ isHost }: { isHost: boolean; }) {
           <p>Spelare 2: {player2?.name ?? 'Väntar på spelare...'}</p>
         </div>
         {isHost && (
-          <button onClick={gameTime} className="startButton">STARTA MATCH</button>
+          <button onClick={gameTime} disabled={!player1 || !player2 } className="startButton">STARTA MATCH</button>
         )}
 
         {!isHost && (

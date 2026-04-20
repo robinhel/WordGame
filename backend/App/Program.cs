@@ -146,13 +146,21 @@ app.MapGet("/api/game/{id}", (string id) =>
         : Results.Ok(game);
 });
 
-app.MapPost("/api/Start/{id}", (string id, string word) =>
+app.MapPost("/api/Start/{id}", async (string id, string word, IHubContext<GameHub> hubContext) =>
 {
     var success = StartGame(id, word);
 
-    return success
+    if(success)
+    {
+        await hubContext.Clients.Group(id).SendAsync("GameStarted");
+        return Results.Ok();
+    }
+
+    return Results.BadRequest(); // NY
+
+    /* return success
         ? Results.Ok()
-        : Results.BadRequest();
+        : Results.BadRequest(); */
 });
 
 app.MapPost("/api/Join/{id}", async (string id, string name, IHubContext<GameHub> hubContext) =>
