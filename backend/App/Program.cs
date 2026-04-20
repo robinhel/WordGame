@@ -1,23 +1,12 @@
 
-
+using Microsoft.AspNetCore.SignalR;
 using WordGame.Models;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddSignalR();
 var app = builder.Build();
 
 var games = new Dictionary<string, Game>();
-
-Game game1 = new Game
-{
-    Id = "ABC123",
-    CurrentRound = 1,
-    Players = new List<Player>
-    {
-        new Player("Calle"),
-        new Player("Player 2")
-    }
-};
-games[game1.Id] = game1;
 
 Player AddPlayer(string gameId, string name)
 {
@@ -157,7 +146,7 @@ app.MapGet("/api/game/{id}", (string id) =>
         : Results.Ok(game);
 });
 
-app.MapPost("/Start/{id}", (string id, string word) =>
+app.MapPost("/api/Start/{id}", (string id, string word) =>
 {
     var success = StartGame(id, word);
 
@@ -166,24 +155,41 @@ app.MapPost("/Start/{id}", (string id, string word) =>
         : Results.BadRequest();
 });
 
-app.MapPost("/Join/{id}", (string id, string name) =>
+app.MapPost("/api/Join/{id}", async (string id, string name, IHubContext<GameHub> hubContext) =>
 {
     var success = JoinGame(id, name);
-
-    return success
-        ? Results.Ok()
-        : Results.BadRequest();
+    // TESTA
+    if(success)
+    {
+        await hubContext.Clients.Group(id).SendAsync("PlayerJoined");
+        return Results.Ok();
+    }
+    // TESTA
+    return Results.BadRequest();
 });
 
-app.MapPost("/Move/{id}", (string id, string playerId, string word) =>
+app.MapPost("/api/Move/{id}", async (string id, string playerId, string word, IHubContext<GameHub> hubContext) =>
 {
     var success = MakeMove(id, playerId, word);
 
-    return success
-        ? Results.Ok()
-        : Results.BadRequest();
+    if(success)
+    {
+        await hubContext.Clients.Group(id).SendAsync("ReceiveMove", word);
+        return Results.Ok();
+    }
+    return Results.BadRequest();
 });
+
+app.MapHub<GameHub>("/gamehub");
 
 app.Run();
 
+public class GameHub : Hub
+{
+    public async Task JoinRoom(string gameId)
+    {
+        await Groups.AddToGroupAsync(Context.ConnectionId, gameId);
+    }
+}
+public record JoinRequest(string Name);
 public partial class Program { }
