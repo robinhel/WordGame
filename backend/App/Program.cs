@@ -124,6 +124,7 @@ bool MakeMove(string gameId, string playerId, string word)
 
 // ----------------------------------------------------- Endpoints --------------------------------------------------
 
+app.MapGet("/api/health", () => Results.Ok("OK"));
 
 
 app.MapPost("/api/create", () =>
