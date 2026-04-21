@@ -150,7 +150,7 @@ app.MapPost("/api/Start/{id}", async (string id, string word, IHubContext<GameHu
 {
     var success = StartGame(id, word);
 
-    if(success)
+    if (success)
     {
         await hubContext.Clients.Group(id).SendAsync("GameStarted");
         return Results.Ok();
@@ -167,7 +167,7 @@ app.MapPost("/api/Join/{id}", async (string id, string name, IHubContext<GameHub
 {
     var success = JoinGame(id, name);
     // TESTA
-    if(success)
+    if (success)
     {
         await hubContext.Clients.Group(id).SendAsync("PlayerJoined");
         return Results.Ok();
@@ -180,9 +180,9 @@ app.MapPost("/api/Move/{id}", async (string id, string playerId, string word, IH
 {
     var success = MakeMove(id, playerId, word);
 
-    if(success)
+    if (success)
     {
-        await hubContext.Clients.Group(id).SendAsync("ReceiveMove", word);
+        await hubContext.Clients.Group(id).SendAsync("ReceiveMove", playerId, word);
         return Results.Ok();
     }
     return Results.BadRequest();
