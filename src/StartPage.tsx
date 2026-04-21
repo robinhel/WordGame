@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../sass/startPage.scss';
 
 
 export default function StartPage() {
-  const [message, setMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [username, setUsername] = useState('');
   const [roomCode, setRoomCode] = useState('');

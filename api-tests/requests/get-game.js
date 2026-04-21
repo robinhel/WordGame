@@ -1,6 +1,6 @@
 export default {
     method: 'GET',
-    url: '{{baseUrl}}/game/{{gameId}}'
+    url: '{{baseUrl}}/api/game/{{gameId}}'
 };
 
 export function postResponse() {
