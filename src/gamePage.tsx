@@ -1,13 +1,13 @@
 import * as signalR from '@microsoft/signalr';
-import { useEffect, useMemo, useState } from 'react'
-import { useLocation, useParams } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useParams } from 'react-router-dom';
 import '../sass/gamePage.scss';
 import { useNavigate } from "react-router-dom";
 
 
 interface Player {
-    id: string
-    name: string
+    id: string;
+    name: string;
 }
 interface Game {
     id: string;
@@ -17,123 +17,123 @@ interface Game {
 }
 
 export default function GamePage() {
-    const { gameId } = useParams()
-    const location = useLocation()
-    const username = location.state?.username || 'Anonym spelare'
-    const [game, setGame] = useState<Game | null>(null)
-    const [word, setWord] = useState('')
-    const navigate = useNavigate()
-    const [endGame, setEndGame] = useState(false)
+    const { gameId } = useParams();
+    const location = useLocation();
+    const username = location.state?.username || 'Anonym spelare';
+    const [game, setGame] = useState<Game | null>(null);
+    const [word, setWord] = useState('');
+    const navigate = useNavigate();
+    const [endGame, setEndGame] = useState(false);
     const [submittedWords, setSubmittedWords] = useState<{ playerId: string, text: string; }[]>([]);
 
-    const handleQuitClick = () => setEndGame(true)
-    const handleCancel = () => setEndGame(false)
+    const handleQuitClick = () => setEndGame(true);
+    const handleCancel = () => setEndGame(false);
 
     const handleConfirmQuit = () => {
-        navigate('/')
-    }
+        navigate('/');
+    };
 
 
     const currentPlayer = useMemo(() => {
-        return game?.players.find(player => player.name === username) ?? null
-    }, [game, username])
+        return game?.players.find(player => player.name === username) ?? null;
+    }, [game, username]);
 
     const isMyTurn = useMemo(() => {
         if (!game || !currentPlayer)
-            return false
+            return false;
 
-        return game.players[game.currentTurnIndex]?.id === currentPlayer.id
-    }, [game, currentPlayer])
+        return game.players[game.currentTurnIndex]?.id === currentPlayer.id;
+    }, [game, currentPlayer]);
 
     const getGameStatus = async () => {
         if (!gameId)
-            return
+            return;
 
         try {
-            const response = await fetch(`/api/game/${gameId}`)
+            const response = await fetch(`/api/game/${gameId}`);
             if (!response.ok)
-                throw new Error('Game not found')
+                throw new Error('Game not found');
 
-            const data = await response.json()
-            setGame(data)
+            const data = await response.json();
+            setGame(data);
         } catch (err) {
-            console.error(err)
+            console.error(err);
         }
-    }
+    };
 
     useEffect(() => {
-        if (!gameId) return
+        if (!gameId) return;
 
-        void getGameStatus()
-    }, [gameId])
+        void getGameStatus();
+    }, [gameId]);
 
 
     useEffect(() => {
         if (!gameId)
-            return
+            return;
 
-        let isMounted = true
+        let isMounted = true;
 
         const connection = new signalR.HubConnectionBuilder()
             .withUrl('/gamehub')
             .withAutomaticReconnect()
-            .build()
+            .build();
 
         const handleReceiveMove = (playerId: string, newWord: string) => {
-            setSubmittedWords(prev => [...prev, { playerId, text: newWord }])
-            void getGameStatus()
-        }
+            setSubmittedWords(prev => [...prev, { playerId, text: newWord }]);
+            void getGameStatus();
+        };
 
-        connection.on('ReceiveMove', handleReceiveMove)
+        connection.on('ReceiveMove', handleReceiveMove);
 
         const startConnection = async () => {
             try {
-                await connection.start()
+                await connection.start();
 
                 if (!isMounted)
-                    return
+                    return;
 
-                await connection.invoke('JoinRoom', gameId)
+                await connection.invoke('JoinRoom', gameId);
             } catch (err) {
-                const message = err instanceof Error ? err.message : String(err)
+                const message = err instanceof Error ? err.message : String(err);
                 const isNegotiationAbort =
                     message.includes('stopped during negotiation') ||
-                    message.includes('AbortError')
+                    message.includes('AbortError');
 
                 if (!isMounted && isNegotiationAbort)
-                    return
+                    return;
 
-                console.error('Fel vid anslutning till SignalR: ', err)
+                console.error('Fel vid anslutning till SignalR: ', err);
             }
-        }
+        };
 
-        void startConnection()
+        void startConnection();
 
         return () => {
-            isMounted = false
-            connection.off('ReceiveMove', handleReceiveMove)
-            void connection.stop()
-        }
-    }, [gameId])
+            isMounted = false;
+            connection.off('ReceiveMove', handleReceiveMove);
+            void connection.stop();
+        };
+    }, [gameId]);
 
 
     const submitWord = async () => {
         if (!gameId || !currentPlayer || !isMyTurn)
-            return
+            return;
 
-        if (!word.trim()) return
+        if (!word.trim()) return;
 
         const response = await fetch(`/api/Move/${gameId}?playerId=${currentPlayer.id}&word=${encodeURIComponent(word)}`, {
             method: 'POST'
-        })
+        });
 
         if (!response.ok) {
-            console.error('Ogiltigt ord eller inte din tur.')
-            return
+            console.error('Ogiltigt ord eller inte din tur.');
+            return;
         }
 
-        setWord('')
-    }
+        setWord('');
+    };
 
     // if (!game) return <h1>Laddar...</h1>
 
@@ -203,5 +203,5 @@ export default function GamePage() {
                 )}
             </div>
         </div>
-    </>
+    </>;
 }
