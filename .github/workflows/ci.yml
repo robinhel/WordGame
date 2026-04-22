@@ -113,8 +113,8 @@ jobs:
         uses: dorny/test-reporter@v1
         with:
           name: Backend xUnit
-          path: reports/backend-tests.trx
-          reporter: dotnet-trx
+          path: reports/backend-tests.xml
+          reporter: java-junit
 
       - name: Publish frontend unit test results
         if: always()
