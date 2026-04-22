@@ -128,7 +128,69 @@ Then('I should be redirected to the start page', async ({ page }) => {
 })
 
 
+// -------- GAMEPLAY ------------
+
+Given('a game exists with two players for room {string}', async ({ page }, roomCode) => {
+  
+    await page.route('**/api/create', async route => {
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ id: roomCode, url: `/game/${roomCode}` })
+        });
+    });
+
+
+    await page.route(`**/api/Join/${roomCode}**`, async route => {
+        await route.fulfill({ status: 200 });
+    });
+
+
+    await page.route(`**/api/game/${roomCode}`, async route => {
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                id: roomCode,
+                currentRound: 1,
+                currentTurnIndex: 0,
+                players: [
+                    { id: 'p1', name: 'Värden' },
+                    { id: 'p2', name: 'Kompis' }
+                ]
+            })
+        });
+    });
+    
+    await page.route(`**/api/Move/${roomCode}**`, async route => {
+        await route.fulfill({ status: 200 });
+    });
+});
+
+When('the host starts the match for room {string}', async ({ page }, roomCode) => {
+    await page.route(`**/api/Start/${roomCode}**`, async route => {
+        await route.fulfill({ status: 200 });
+    });
+
+    await page.getByRole('button', { name: 'STARTA MATCH' }).click();
+    await page.goto(`/game/${roomCode}`);
+});
+When('Player 1 writes the word {string}', async ({ page }, word) => {
+    const input = page.locator('input').first();
+    await input.fill(word, { force: true })
+})
+
+When('Player 1 clicks send', async ({ page }) => {
+    await page.getByRole('button', { name: 'Skicka' }).click();
+})
+
+Then('the input field should be empty', async ({ page }) => {
+    const input = page.locator('input').first();
+    await expect(input).toHaveValue('');
+})
+
 
 // getByRole letar efter en knapp-tagg
 // getByLabel letar efter ett fält som är kopplat till <label>
 // getByPlaceholder letar efter samma placeholder som du skriver in i paranteserna
+

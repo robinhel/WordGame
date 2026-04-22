@@ -1,4 +1,4 @@
-// Generated from: e2e/features/lobby.feature
+// Generated from: e2e\features\lobby.feature
 import { test } from "playwright-bdd";
 
 test.describe('Game Lobby', () => {
@@ -69,7 +69,7 @@ test.describe('Game Lobby', () => {
 
 test.use({
   $test: [({}, use) => use(test), { scope: 'test', box: true }],
-  $uri: [({}, use) => use('e2e/features/lobby.feature'), { scope: 'test', box: true }],
+  $uri: [({}, use) => use('e2e\\features\\lobby.feature'), { scope: 'test', box: true }],
   $bddFileData: [({}, use) => use(bddFileData), { scope: "test", box: true }],
 });
 
