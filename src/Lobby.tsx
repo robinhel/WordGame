@@ -11,18 +11,18 @@ export default function Lobby({ isHost }: { isHost: boolean; }) {
   const location = useLocation();
   const username = location.state?.username || 'Anonym spelare';
   interface Player {
-    id: string
-    name: string
+    id: string;
+    name: string;
   }
 
   interface Game {
-    id: string
-    currentRound: number
-    players: Array<Player | null>
+    id: string;
+    currentRound: number;
+    players: Array<Player | null>;
   }
   //const [players, setPlayers] = useState<Player[]>([]);
 
-  const [game, setGame] = useState<Game | null>(null)
+  const [game, setGame] = useState<Game | null>(null);
 
   const gameTime = async () => {
     const startWord = "lastbil";
@@ -35,7 +35,7 @@ export default function Lobby({ isHost }: { isHost: boolean; }) {
       const response = await fetch(`/api/game/${gameCode}`);
       if (response.ok) {
         const gameData = await response.json();
-        setGame(gameData)
+        setGame(gameData);
       } else {
         console.error("Spelet existerar inte");
       }
@@ -104,8 +104,8 @@ export default function Lobby({ isHost }: { isHost: boolean; }) {
   }, [gameCode, navigate, username]);
 
 
-  const player1 = game?.players?.[0] ?? null
-  const player2 = game?.players?.[1] ?? null
+  const player1 = game?.players?.[0] ?? null;
+  const player2 = game?.players?.[1] ?? null;
   console.log(player1);
   console.log(player2);
 
