@@ -1,0 +1,11 @@
+﻿{
+  "name": "wordgame-post-they",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:api": "post-they run api-tests"
+  },
+  "devDependencies": {
+    "post-they": "^0.2.0"
+  }
+}

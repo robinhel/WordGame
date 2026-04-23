@@ -1,0 +1,10 @@
+﻿{
+  "name": "wordgame-postman",
+  "private": true,
+  "scripts": {
+    "run": "newman run demo.postman_collection.json -e demo.postman_environments.json"
+  },
+  "devDependencies": {
+    "newman": "^6.1.3"
+  }
+}
