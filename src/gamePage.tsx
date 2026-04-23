@@ -26,6 +26,10 @@ export default function GamePage() {
     const [endGame, setEndGame] = useState(false);
     const [submittedWords, setSubmittedWords] = useState<{ playerId: string, text: string; }[]>([]);
 
+    const [timeLeft, setTimeLeft] = useState(7);
+    const [hp, setHp] = useState(3);
+    const [isGameOver, setIsGameOver] = useState(false);
+
     const handleQuitClick = () => setEndGame(true);
     const handleCancel = () => setEndGame(false);
 
@@ -127,6 +131,11 @@ export default function GamePage() {
             method: 'POST'
         });
 
+        if (response.ok) {
+            setWord(''); 
+            setTimeLeft(7); 
+        }
+
         if (!response.ok) {
             console.error('Ogiltigt ord eller inte din tur.');
             return;
@@ -135,10 +144,56 @@ export default function GamePage() {
         setWord('');
     };
 
-    // if (!game) return <h1>Laddar...</h1>
+
+    useEffect(() => {
+        if (isGameOver || !isMyTurn) {
+            setTimeLeft(7); 
+            return;
+        }
+
+        if (timeLeft === 0) {
+            if (hp > 1) {
+                setHp(prev => prev - 1);
+                setTimeLeft(7);
+            } else {
+                setHp(0);
+                setIsGameOver(true);
+            }
+            return;
+        }
+
+        const timer = setInterval(() => {
+            setTimeLeft(prev => prev - 1);
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [timeLeft, hp, isGameOver, isMyTurn]); 
+
 
     return <>
         <div className='game'>
+            <div className="game-stats" style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '10px' }}>
+                <div className="hp-indicator" style={{ fontSize: '1.5rem' }}>
+                    HP: {"❤️".repeat(hp)}
+                </div>
+                <div className={`timer-display ${timeLeft <= 2 ? "danger" : ""}`} style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>
+                    Tid: {timeLeft}s
+                </div>
+            </div>
+
+            {isGameOver && (
+                <div className="endGame" style={{ zIndex: 100 }}>
+                    <h3>G A M E - O V E R</h3>
+                    <p>Du fick slut på HP!</p>
+                </div>
+            )}
+
+            {isMyTurn && timeLeft <= 2 && timeLeft > 0 && (
+                <div className="alert alert-warning">            
+                    <strong>Skynda dig!</strong> Du har bara {timeLeft} sekunder kvar!
+                </div>
+            )}
+
             <aside className="sidebar">
                 <h2 className="Historik">Historik</h2>
                 <div className="history-list">
@@ -173,7 +228,7 @@ export default function GamePage() {
                         type="text"
                         value={word}
                         onChange={(e) => setWord(e.target.value)}
-                        disabled={!isMyTurn || game?.players[0]?.name !== username}
+                        disabled={!isMyTurn || game?.players[0]?.name !== username || isGameOver}
                         placeholder={game?.players[0]?.name === username ? 'Skriv ditt ord...' : 'Väntar på spelare 1...'}
                     />
                 </div>
@@ -187,12 +242,12 @@ export default function GamePage() {
                         type="text"
                         value={word}
                         onChange={(e) => setWord(e.target.value)}
-                        disabled={!isMyTurn || game?.players[1]?.name !== username}
+                        disabled={!isMyTurn || game?.players[1]?.name !== username || isGameOver}
                         placeholder={game?.players[1]?.name === username ? 'Skriv ditt ord...' : 'Väntar på spelare 2...'}
                     />
                 </div>
             </div>
-            <button className='skicka' onClick={submitWord}>
+            <button className='skicka' onClick={submitWord} disabled={isGameOver}>
                 Skicka
             </button>
             <div className="choosenWord">
