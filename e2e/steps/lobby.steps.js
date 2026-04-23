@@ -127,6 +127,75 @@ Then('I should be redirected to the start page', async ({ page }) => {
     await expect(page).toHaveURL(/.*localhost:5173\/$/);
 })
 
+Given('I am a guest in the lobby with code {string}', async ({ page }, code) => {
+    await page.goto(`http://localhost:5173/join-game/${code}`)
+})
+
+Then('the button {string} should not be visible', async ({ page }, buttonText) => {
+    const button = page.getByRole('button', { name: buttonText })
+    await expect(button).not.toBeVisible()
+})
+
+When('the game starts', async ({ page }) => {
+    await page.goto('http://localhost:5173/game/ABCDEF')
+})
+
+Then('I should be redirected to the {string} page', async ({ page }, destination) => {
+    if (destination === 'game') {
+        await expect(page).toHaveURL(/.*\/game\/.*/)
+        return
+    }
+
+    await expect(page).toHaveURL(new RegExp(destination))
+})
+
+Given('I am on the game page with code {string}', async ({ page }, code) => {
+    await page.route(`**/api/game/${code}`, async route => {
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                id: code,
+                players: [{ name: 'Player 1' }, { name: 'Player 2' }],
+                currentRound: 1,
+            }),
+        })
+    })
+    await page.goto(`http://localhost:5173/game/${code}`)
+})
+
+Then('it should be {string} turn', async ({ page }, player) => {
+    await expect(page.locator('.word-history')).toContainText(player)
+})
+
+Then('the input for {string} should be disabled', async ({ page }, player) => {
+    const select = player === 'Player 2' ? '.play2 input' : '.play1 input'
+    await expect(page.locator(select)).toBeDisabled()
+})
+
+Then('the input for {string} should be enabled', async ({ page }, player) => {
+    const select = player === 'Player 2' ? '.play2 input' : '.play1 input'
+    await expect(page.locator(select)).toBeEnabled()
+})
+
+When('I type {string} into the {string} input', async ({ page }, word, player) => {
+    const select = player === 'Player 1' ? '.play1 input' : '.play2 input'
+    await page.locator(select).fill(word)
+})
+
+Then('I should see {string} as the last chosen word', async ({ page }, word) => {
+    await expect(page.locator('.choosenWord h1')).toHaveText(word)
+})
+
+Then('I should see {string} in the history sidebar', async ({ page }, text) => {
+    await expect(page.locator('.sidebar')).toContainText(text)
+})
+
+Then('I should see the error {string}', async ({ page }, textMessage) => {
+    const error = page.getByText(textMessage)
+    await expect(error).toBeVisible()
+})
+
 
 
 // getByRole letar efter en knapp-tagg
