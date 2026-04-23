@@ -39,14 +39,18 @@ export default function Lobby({ isHost }: { isHost: boolean; }) {
       } else {
         console.error("Spelet existerar inte");
       }
-    } catch (error) {
+    } catch {
       console.error("Fel vid hämtningen av spelstatus.");
     }
   };
 
 
   useEffect(() => {
-    getGameStatus();
+    const timer = setTimeout(() => {
+      void getGameStatus();
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [gameCode]);
 
 

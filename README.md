@@ -71,3 +71,21 @@ export default defineConfig([
   },
 ])
 ```
+
+## CI/CD and Rulesets
+
+This repository includes GitHub Actions workflows:
+
+- `.github/workflows/ci.yml`: runs lint, build, Vitest, .NET tests, API tests and Playwright E2E.
+- `.github/workflows/cd.yml`: packages frontend and backend artifacts, with a deployment placeholder step.
+
+Ruleset baseline for `main` is documented in:
+
+- `.github/RULESET.md`
+
+To enforce quality before merge, configure your GitHub ruleset to require these checks:
+
+- `Frontend Quality (Lint, Build, Vitest)`
+- `Backend Tests (.NET)`
+- `API Tests (post-they)`
+- `E2E Tests (Playwright BDD)`
