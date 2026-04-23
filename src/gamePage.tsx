@@ -1,77 +1,149 @@
-import { act, useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import * as signalR from '@microsoft/signalr';
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useParams } from 'react-router-dom';
 import '../sass/gamePage.scss';
 import { useNavigate } from "react-router-dom";
 
 
 interface Player {
-    id: string
-    name: string
+    id: string;
+    name: string;
 }
 interface Game {
     id: string;
     currentRound: number;
+    currentTurnIndex: number;
     players: Player[];
 }
 
 export default function GamePage() {
-    const { gameId } = useParams()
-    const [game, setGame] = useState<Game | null>(null)
-    const [player1Word, setPlayer1Word] = useState('')
-    const [player2Word, setPlayer2Word] = useState('')
-    const [activePlayer, setActivePlayer] = useState<1 | 2>(1)
-    const navigate = useNavigate()
-    const [endGame, setEndGame] = useState(false)
-    const [submittedWords, setSubmittedWords] = useState<{ player: number, text: string; }[]>([]);
+    const { gameId } = useParams();
+    const location = useLocation();
+    const username = location.state?.username || 'Anonym spelare';
+    const [game, setGame] = useState<Game | null>(null);
+    const [word, setWord] = useState('');
+    const navigate = useNavigate();
+    const [endGame, setEndGame] = useState(false);
+    const [submittedWords, setSubmittedWords] = useState<{ playerId: string, text: string; }[]>([]);
 
-    const handleQuitClick = () => setEndGame(true)
-    const handleCancel = () => setEndGame(false)
+    const handleQuitClick = () => setEndGame(true);
+    const handleCancel = () => setEndGame(false);
 
     const handleConfirmQuit = () => {
-        navigate('/')
-    }
+        navigate('/');
+    };
 
 
-    
-    useEffect(() => {
-        if (!gameId) return
+    const currentPlayer = useMemo(() => {
+        return game?.players.find(player => player.name === username) ?? null;
+    }, [game, username]);
 
-        fetch(`/api/game/${gameId}`)
-            .then(res => {
-                if (!res.ok) throw new Error('Game not found')
-                return res.json()
-            })
-            .then(data => setGame(data))
-            .catch(err => console.error(err))
-    }, [gameId])
+    const isMyTurn = useMemo(() => {
+        if (!game || !currentPlayer)
+            return false;
 
+        return game.players[game.currentTurnIndex]?.id === currentPlayer.id;
+    }, [game, currentPlayer]);
 
-    const submitWord = () => {
-        const word = activePlayer === 1 ? player1Word : player2Word
+    const getGameStatus = async () => {
+        if (!gameId)
+            return;
 
-        if (!word.trim()) return
+        try {
+            const response = await fetch(`/api/game/${gameId}`);
+            if (!response.ok)
+                throw new Error('Game not found');
 
-        setSubmittedWords([...submittedWords, { player: activePlayer, text: word}])
-        console.log(`Player ${activePlayer} skickade:`, word)
-
-        if (activePlayer === 1) {
-            setPlayer1Word('')
-            setActivePlayer(2)
-        } else {
-            setPlayer2Word('')
-            setActivePlayer(1)
+            const data = await response.json();
+            setGame(data);
+        } catch (err) {
+            console.error(err);
         }
-    }
+    };
+
+    useEffect(() => {
+        if (!gameId) return;
+
+        void getGameStatus();
+    }, [gameId]);
+
+
+    useEffect(() => {
+        if (!gameId)
+            return;
+
+        let isMounted = true;
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl('/gamehub')
+            .withAutomaticReconnect()
+            .build();
+
+        const handleReceiveMove = (playerId: string, newWord: string) => {
+            setSubmittedWords(prev => [...prev, { playerId, text: newWord }]);
+            void getGameStatus();
+        };
+
+        connection.on('ReceiveMove', handleReceiveMove);
+
+        const startConnection = async () => {
+            try {
+                await connection.start();
+
+                if (!isMounted)
+                    return;
+
+                await connection.invoke('JoinRoom', gameId);
+            } catch (err) {
+                const message = err instanceof Error ? err.message : String(err);
+                const isNegotiationAbort =
+                    message.includes('stopped during negotiation') ||
+                    message.includes('AbortError');
+
+                if (!isMounted && isNegotiationAbort)
+                    return;
+
+                console.error('Fel vid anslutning till SignalR: ', err);
+            }
+        };
+
+        void startConnection();
+
+        return () => {
+            isMounted = false;
+            connection.off('ReceiveMove', handleReceiveMove);
+            void connection.stop();
+        };
+    }, [gameId]);
+
+
+    const submitWord = async () => {
+        if (!gameId || !currentPlayer || !isMyTurn)
+            return;
+
+        if (!word.trim()) return;
+
+        const response = await fetch(`/api/Move/${gameId}?playerId=${currentPlayer.id}&word=${encodeURIComponent(word)}`, {
+            method: 'POST'
+        });
+
+        if (!response.ok) {
+            console.error('Ogiltigt ord eller inte din tur.');
+            return;
+        }
+
+        setWord('');
+    };
 
     // if (!game) return <h1>Laddar...</h1>
 
     return <>
         <div className='game'>
             <aside className="sidebar">
-                <h2 className= "Historik">Historik</h2>
+                <h2 className="Historik">Historik</h2>
                 <div className="history-list">
                     {submittedWords.map((item, index) => {
-                        const playerName = game?.players[item.player - 1]?.name || `Spelare ${item.player}`;
+                        const playerName = game?.players.find(player => player.id === item.playerId)?.name || 'Okänd spelare';
                         return (
                             <p key={index} className="history-item">
                                 <strong>{playerName}:</strong> {item.text}
@@ -99,25 +171,25 @@ export default function GamePage() {
                     <p>{game?.players[0].name}</p>
                     <input
                         type="text"
-                        value={player1Word}
-                        onChange={(e) => setPlayer1Word(e.target.value)}
-                        disabled={activePlayer !== 1}
-                        placeholder="Player 1 skriver..."
+                        value={word}
+                        onChange={(e) => setWord(e.target.value)}
+                        disabled={!isMyTurn || game?.players[0]?.name !== username}
+                        placeholder={game?.players[0]?.name === username ? 'Skriv ditt ord...' : 'Väntar på spelare 1...'}
                     />
                 </div>
                 <div className="word-history">
-                    {activePlayer === 1 ? <p>{game?.players[0].name} tur</p> : <p>{game?.players[1].name} tur</p> } 
+                    <p>{game?.players[game?.currentTurnIndex ?? 0]?.name} tur</p>
                 </div>
 
                 <div className='play2'>
                     <p>{game?.players[1].name}</p>
                     <input
                         type="text"
-                        value={player2Word}
-                        onChange={(e) => setPlayer2Word(e.target.value)}
-                        disabled={activePlayer !== 2}
-                        placeholder="Player 2 skriver..."
-                        />
+                        value={word}
+                        onChange={(e) => setWord(e.target.value)}
+                        disabled={!isMyTurn || game?.players[1]?.name !== username}
+                        placeholder={game?.players[1]?.name === username ? 'Skriv ditt ord...' : 'Väntar på spelare 2...'}
+                    />
                 </div>
             </div>
             <button className='skicka' onClick={submitWord}>
@@ -131,5 +203,5 @@ export default function GamePage() {
                 )}
             </div>
         </div>
-    </>
+    </>;
 }

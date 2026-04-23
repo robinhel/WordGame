@@ -1,6 +1,6 @@
 export default {
     method: 'POST',
-    url: '{{baseUrl}}/create'
+    url: '{{baseUrl}}/api/create'
 };
 
 export function postResponse() {

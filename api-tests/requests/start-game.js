@@ -1,6 +1,6 @@
 export default {
     method: 'POST',
-    url: '{{baseUrl}}/Start/{{gameId}}?word=HeJ'
+    url: '{{baseUrl}}/api/Start/{{gameId}}?word=HeJ'
 };
 
 export function postResponse() {

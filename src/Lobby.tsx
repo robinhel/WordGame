@@ -11,18 +11,18 @@ export default function Lobby({ isHost }: { isHost: boolean; }) {
   const location = useLocation();
   const username = location.state?.username || 'Anonym spelare';
   interface Player {
-    id: string
-    name: string
+    id: string;
+    name: string;
   }
 
   interface Game {
-    id: string
-    currentRound: number
-    players: Array<Player | null>
+    id: string;
+    currentRound: number;
+    players: Array<Player | null>;
   }
   //const [players, setPlayers] = useState<Player[]>([]);
 
-  const [game, setGame] = useState<Game | null>(null)
+  const [game, setGame] = useState<Game | null>(null);
 
   const gameTime = async () => {
     const startWord = "lastbil";
@@ -35,7 +35,7 @@ export default function Lobby({ isHost }: { isHost: boolean; }) {
       const response = await fetch(`/api/game/${gameCode}`);
       if (response.ok) {
         const gameData = await response.json();
-        setGame(gameData)
+        setGame(gameData);
       } else {
         console.error("Spelet existerar inte");
       }
@@ -51,30 +51,61 @@ export default function Lobby({ isHost }: { isHost: boolean; }) {
 
 
   useEffect(() => {
+    if (!gameCode)
+      return;
+
+    let isMounted = true;
+
     const connection = new signalR.HubConnectionBuilder()
       .withUrl("/gamehub")
+      .withAutomaticReconnect()
       .build();
 
-    connection.start().then(() => {
-      connection.invoke("JoinRoom", gameCode);
-    }).catch(err => {
-      console.error("Fel vid anslutning till SignalR: ", err);
-    });
+    const handlePlayerJoined = () => {
+      void getGameStatus();
+    };
 
-    connection.on("PlayerJoined", () => {
-      getGameStatus();
-    });
-
-    connection.on("GameStarted", () => {
+    const handleGameStarted = () => {
       navigate(`/game/${gameCode}`, { state: { username: username } });
-    }) // NY
+    };
 
-    return () => { connection.stop(); };
-  }, [gameCode]);
+    connection.on("PlayerJoined", handlePlayerJoined);
+    connection.on("GameStarted", handleGameStarted);
+
+    const startConnection = async () => {
+      try {
+        await connection.start();
+
+        if (!isMounted)
+          return;
+
+        await connection.invoke("JoinRoom", gameCode);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        const isNegotiationAbort =
+          message.includes("stopped during negotiation") ||
+          message.includes("AbortError");
+
+        if (!isMounted && isNegotiationAbort)
+          return;
+
+        console.error("Fel vid anslutning till SignalR: ", err);
+      }
+    };
+
+    void startConnection();
+
+    return () => {
+      isMounted = false;
+      connection.off("PlayerJoined", handlePlayerJoined);
+      connection.off("GameStarted", handleGameStarted);
+      void connection.stop();
+    };
+  }, [gameCode, navigate, username]);
 
 
-  const player1 = game?.players?.[0] ?? null
-  const player2 = game?.players?.[1] ?? null
+  const player1 = game?.players?.[0] ?? null;
+  const player2 = game?.players?.[1] ?? null;
   console.log(player1);
   console.log(player2);
 
@@ -91,7 +122,7 @@ export default function Lobby({ isHost }: { isHost: boolean; }) {
           <p>Spelare 2: {player2?.name ?? 'Väntar på spelare...'}</p>
         </div>
         {isHost && (
-          <button onClick={gameTime} disabled={!player1 || !player2 } className="startButton">STARTA MATCH</button>
+          <button onClick={gameTime} disabled={!player1 || !player2} className="startButton">STARTA MATCH</button>
         )}
 
         {!isHost && (
