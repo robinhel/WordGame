@@ -48,7 +48,7 @@ test.describe('Game Lobby', () => {
   });
 
   test('User wants to quit the game but cancels', async ({ Given, Then, And, page }) => { 
-    await Given('I am on the "game-Time" page', null, { page }); 
+    await Given('I am on the "game" page', null, { page }); 
     await And('I click on the button "Avsluta spel"', null, { page }); 
     await Then('I should see "Vill du verkligen avsluta spelet?"', null, { page }); 
     await And('I click "Nej"', null, { page }); 
@@ -56,11 +56,30 @@ test.describe('Game Lobby', () => {
   });
 
   test('User wants to quit the game and get redirected to the start page', async ({ Given, Then, And, page }) => { 
-    await Given('I am on the "game-Time" page', null, { page }); 
+    await Given('I am on the "game" page', null, { page }); 
     await And('I click on the button "Avsluta spel"', null, { page }); 
     await Then('I should see "Vill du verkligen avsluta spelet?"', null, { page }); 
     await And('I click "Ja"', null, { page }); 
     await Then('I should be redirected to the start page', null, { page }); 
+  });
+
+  test('Guest waits in lobby and gets redirected when game starts', async ({ Given, When, Then, page }) => { 
+    await Given('I am a guest in the lobby with code "ABCDEF"', null, { page }); 
+    await Then('I should see "Väntar på att värden ska starta matchen..."', null, { page }); 
+    await Then('the button "STARTA MATCH" should not be visible', null, { page }); 
+    await When('the game starts', null, { page }); 
+    await Then('I should be redirected to the "game" page', null, { page }); 
+  });
+
+  test('Players can submit words and turn passes', async ({ Given, When, Then, And, page }) => { 
+    await Given('I am on the game page with code "ABCDEF"', null, { page }); 
+    await Then('it should be "Player 1" turn', null, { page }); 
+    await Then('the input for "Player 2" should be disabled', null, { page }); 
+    await When('I type "Kaffe" into the "Player 1" input', null, { page }); 
+    await And('I click on "Skicka"', null, { page }); 
+    await Then('I should see "Kaffe" as the last chosen word', null, { page }); 
+    await And('I should see "Player 1: Kaffe" in the history sidebar', null, { page }); 
+    await And('it should be "Player 2" turn', null, { page }); 
   });
 
 });
