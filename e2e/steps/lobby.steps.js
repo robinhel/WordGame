@@ -7,7 +7,7 @@ const { Given, When, Then } = createBdd();
 // -------- LOBBY TESTING ---------------
 Given('I am on the start page', async ({ page }) => {
     await page.goto('/');
-})
+});
 
 Given('create game API is mocked for host {string} and room {string}', async ({ page }, hostName, roomCode) => {
     await page.route('**/api/create', async route => {
@@ -37,7 +37,7 @@ Given('create game API is mocked for host {string} and room {string}', async ({ 
             })
         });
     });
-})
+});
 
 Given('join game API is mocked for host {string} and room {string}', async ({ page }, hostName, roomCode) => {
     await page.route(`**/api/Join/${roomCode}?name=${hostName}`, async route => {
@@ -59,72 +59,101 @@ Given('join game API is mocked for host {string} and room {string}', async ({ pa
             })
         });
     });
-})
+});
 
 When('I enter the name {string}', async ({ page }, name) => {
-    await page.getByPlaceholder('Skriv in ditt namn...').fill(name)
-})
+    await page.getByPlaceholder('Skriv in ditt namn...').fill(name);
+});
 
 When('I click on {string}', async ({ page }, buttonText) => {
     await page.getByRole('button', { name: buttonText }).click();
-})
+});
 
 Then('I should be redirected to create-game url', async ({ page }) => {
-    await expect(page).toHaveURL(/.*localhost:5173\/create-game.*/)
-})
+    await expect(page).toHaveURL(/.*localhost:5173\/create-game.*/);
+});
 
 Then('I should see {string}', async ({ page }, text) => {
     const message = page.getByText(text);
     await expect(message).toBeVisible();
-})
+});
 
 Then('I should see the roomcode input field', async ({ page }) => {
-    const input = page.getByPlaceholder('Ange rumskod...')
+    const input = page.getByPlaceholder('Ange rumskod...');
     await expect(input).toBeVisible();
-})
+});
 
 When('I type {string} into the roomcode field', async ({ page }, code) => {
-    await page.getByPlaceholder('Ange rumskod...').fill(code)
-})
+    await page.getByPlaceholder('Ange rumskod...').fill(code);
+});
 
 Then('I should be redirected to join-game url', async ({ page }) => {
-    await expect(page).toHaveURL(/localhost:5173\/join-game\/.*/);
+    await expect(page).toHaveURL(/.*\/join-game\/.*/);
 });
-// ---------- INAKTIVERING/AKTIVERING KNAPP TEST -----------
 
+// Scenario: User wants to quit the game but cancels
 Then('the {string} button should be disabled', async ({ page }, buttonText) => {
     const button = page.getByRole('button', { name: buttonText });
     await expect(button).toBeDisabled();
-})
+});
 
 When('I type {string} into the name field', async ({ page }, name) => {
-    await page.getByPlaceholder('Skriv in ditt namn...').fill(name)
-})
+    await page.getByPlaceholder('Skriv in ditt namn...').fill(name);
+});
 
 Then('the {string} button should be enabled', async ({ page }, buttonText) => {
-    const button = page.getByRole('button', { name: buttonText })
-    await expect(button).toBeEnabled()
+    const button = page.getByRole('button', { name: buttonText });
+    await expect(button).toBeEnabled();
 });
-// ------------- AVSLUTA SPEL TEST ---------------
+
+// Scenario: User wants to quit the game and get redirected to the start page
 Given('I am on the {string} page', async ({ page }, pageName) => {
-    const testId = "123"
-    await page.goto(`/game/${testId}`)
-    await expect(page).toHaveURL(new RegExp('game'))
-})
+    const testId = "123";
+    await page.goto(`/game/${testId}`);
+    await expect(page).toHaveURL(new RegExp('game'));
+});
 When('I click on the button {string}', async ({ page }, buttonText) => {
     await page.getByRole('button', { name: buttonText }).click();
-})
+});
 
 When('I click {string}', async ({ page }, messageText) => {
     await page.getByRole('button', { name: messageText }).click();
 });
 // Om användaren trycker nej 
 Then('I should still be at the game page', async ({ page }) => {
-    await expect(page).toHaveURL(/.*\/game\/.*/)
-})
+    await expect(page).toHaveURL(/.*\/game\/.*/);
+});
 // Om användaren trycker ja
 Then('I should be redirected to the start page', async ({ page }) => {
     await expect(page).toHaveURL(/.*localhost:5173\/$/);
+});
+
+
+// -------- TEST FÖR ATT SKICKA ETT GODKÄNT ORD ------------
+
+Given('a game exists with two players for room {string}', async ({ page }, roomCode) => {
+
+    await page.route('**/api/create', async route => {
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({ id: roomCode, url: `/game/${roomCode}` })
+        });
+    });
+
+// Scenario: Guest waits in lobby and gets redirected when game 
+Given('I am a guest in the lobby with code {string}', async ({ page }, code) => {
+     await page.goto(`http://localhost:5173/join-game/${code}`)
+})
+Then('the button {string} should not be visible', async ({ page }, buttonText) => {
+    const button = page.getByRole('button', { name: buttonText });
+    await expect(button).not.toBeVisible();
+})
+When('the game starts', async ({ page }) => {
+     await page.goto('http://localhost:5173/game/ABCDEF')
+})
+Then('I should be redirected to the {string} page', async ({ page }) => {
+    await expect(page).toHaveURL(/.*\/game\/.*/)
 })
 
 Given('I am a guest in the lobby with code {string}', async ({ page }, code) => {
@@ -191,13 +220,103 @@ Then('I should see {string} in the history sidebar', async ({ page }, text) => {
     await expect(page.locator('.sidebar')).toContainText(text)
 })
 
-Then('I should see the error {string}', async ({ page }, textMessage) => {
+// Scenario: Show error message when room code is too short
+Then('I should see the error {string} ', async ({ page }, textMessage) => {
     const error = page.getByText(textMessage)
     await expect(error).toBeVisible()
 })
 
+    await page.route(`**/api/Join/${roomCode}**`, async route => {
+        await route.fulfill({ status: 200 });
+    });
 
+
+    await page.route(`**/api/game/${roomCode}`, async route => {
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                id: roomCode,
+                currentRound: 1,
+                currentTurnIndex: 0,
+                players: [
+                    { id: 'p1', name: 'Anonym spelare' },
+                    { id: 'p2', name: 'Kompis' }
+                ]
+            })
+        });
+    });
+
+    await page.route(`**/api/Move/${roomCode}**`, async route => {
+        await route.fulfill({ status: 200 });
+    });
+});
+
+When('the host starts the match for room {string}', async ({ page }, roomCode) => {
+    await page.route(`**/api/Start/${roomCode}**`, async route => {
+        await route.fulfill({ status: 200 });
+    });
+
+    await page.getByRole('button', { name: 'STARTA MATCH' }).click();
+    await page.goto(`/game/${roomCode}`);
+});
+When('Player 1 writes the word {string}', async ({ page }, word) => {
+    const input = page.locator('input').first();
+    await input.fill(word, { force: true });
+});
+
+When('Player 1 clicks send', async ({ page }) => {
+    await page.getByRole('button', { name: 'Skicka' }).click();
+});
+
+Then('the input field should be empty', async ({ page }) => {
+    const input = page.locator('input').first();
+    await expect(input).toHaveValue('');
+});
+
+// ------- TEST FÖR SKRIVA IN FEL ORD ---------------
+
+When('Player 1 writes an invalid word {string}', async ({ page }, word) => {
+    await page.route('**/api/Move/**', async route => {
+        await route.fulfill({ status: 400 });
+    });
+    const input = page.locator('input').first();
+    await input.fill(word, { force: true });
+});
+
+Then('the input field should NOT be empty', async ({ page }) => {
+    const input = page.locator('input').first();
+    const value = await input.inputValue();
+    expect(value.length).toBeGreaterThan(0);
+});
+
+
+// ------------- TEST FÖR TURORDNING ---------------
+
+Given('it is the opponents turn in room {string}', async ({ page }, roomCode) => {
+    await page.route(`**/api/game/${roomCode}`, async route => {
+        await route.fulfill({
+            status: 200,
+            contentType: 'application/json',
+            body: JSON.stringify({
+                id: roomCode,
+                currentRound: 1,
+                currentTurnIndex: 1,
+                players: [
+                    { id: 'p1', name: 'Värden' },
+                    { id: 'p2', name: 'Kompis' }
+                ]
+            })
+        });
+    });
+});
+
+Then('the input field should be disabled', async ({ page }) => {
+    const input = page.locator('input').first();
+    await expect(input).toBeDisabled();
+});
 
 // getByRole letar efter en knapp-tagg
 // getByLabel letar efter ett fält som är kopplat till <label>
 // getByPlaceholder letar efter samma placeholder som du skriver in i paranteserna
+
