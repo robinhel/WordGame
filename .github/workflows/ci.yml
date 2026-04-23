@@ -1,0 +1,242 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+      - workflow
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security:
+    name: Security (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  frontend-quality:
+    name: Frontend Quality (Lint, Build, Vitest)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Scan npm dependencies
+        run: npm audit --audit-level=high --omit=dev
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Run Vitest
+        run: npm run test:vitest
+
+  backend-tests:
+    name: Backend Tests (.NET)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore backend/MyApp.slnx
+
+      - name: Scan .NET dependencies for vulnerabilities
+        run: |
+          dotnet list backend/App/App.csproj package --vulnerable --include-transitive > dotnet-vulnerabilities.txt
+          cat dotnet-vulnerabilities.txt
+          if grep -Eiq "(Critical|High)" dotnet-vulnerabilities.txt; then
+            echo "High/Critical vulnerabilities found in .NET dependencies."
+            exit 1
+          fi
+
+      - name: Test
+        run: dotnet test backend/MyApp.slnx --configuration Release --no-restore --verbosity normal --logger "trx;LogFileName=unit-tests.trx" --results-directory TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-unit
+          path: TestResults/**
+          if-no-files-found: ignore
+
+  api-tests:
+    name: API Tests (post-they)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Start backend on port 5001
+        run: |
+          dotnet run --project backend/App --urls http://127.0.0.1:5001 > backend.log 2>&1 &
+          echo "BACKEND_PID=$!" >> $GITHUB_ENV
+
+      - name: Wait for backend readiness
+        run: |
+          for i in {1..45}; do
+            if curl -fsS http://127.0.0.1:5001/api/health > /dev/null; then
+              echo "Backend is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Backend did not become ready in time"
+          exit 1
+
+      - name: Run API tests
+        run: npm run test:api
+
+      - name: Upload backend log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-log-api-tests
+          path: backend.log
+
+      - name: Stop backend
+        if: always()
+        run: |
+          if [ -n "${BACKEND_PID}" ]; then
+            kill ${BACKEND_PID} || true
+          fi
+
+  e2e-tests:
+    name: E2E Tests (Playwright BDD)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Start frontend on port 5173
+        run: |
+          npm run dev -- --host 127.0.0.1 --port 5173 > frontend.log 2>&1 &
+          echo "FRONTEND_PID=$!" >> $GITHUB_ENV
+
+      - name: Wait for frontend readiness
+        run: |
+          for i in {1..45}; do
+            if curl -fsS http://127.0.0.1:5173 > /dev/null; then
+              echo "Frontend is ready"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Frontend did not become ready in time"
+          exit 1
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report
+            test-results
+
+      - name: Stop frontend
+        if: always()
+        run: |
+          if [ -n "${FRONTEND_PID}" ]; then
+            kill ${FRONTEND_PID} || true
+          fi
+
+  report:
+    name: Pipeline Summary
+    needs: [security, frontend-quality, backend-tests, api-tests, e2e-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all test artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: test-results-*
+          path: artifacts/
+          merge-multiple: true
+
+      - name: Publish pipeline summary
+        run: |
+          echo "## CI Rapport" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Security (Gitleaks): klart" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Frontend: lint/build/vitest" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Backend: .NET-tester" >> "$GITHUB_STEP_SUMMARY"
+          echo "- API-tester: post-they" >> "$GITHUB_STEP_SUMMARY"
+          echo "- E2E-tester: Playwright BDD" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Nedladdade artefakter:" >> "$GITHUB_STEP_SUMMARY"
+          find artifacts -type f 2>/dev/null | sed 's/^/  - /' >> "$GITHUB_STEP_SUMMARY" || echo "  (inga artefakter)" >> "$GITHUB_STEP_SUMMARY"

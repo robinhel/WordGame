@@ -44,7 +44,7 @@ export default function StartPage() {
         setError('Hittade inget spel med den angivna koden.');
       }
     }
-    catch (error) {
+    catch {
       setError('Kunde inte ansluta till servern.');
     }
   };
