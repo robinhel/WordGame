@@ -44,3 +44,6 @@ playwright/.cache/
 
 # Playwright-BDD (Generated files)
 .features-gen/
+
+# Local repository policy notes
+.github/RULESET.md
