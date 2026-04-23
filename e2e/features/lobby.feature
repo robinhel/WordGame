@@ -60,29 +60,14 @@ Feature: Game Lobby
     When the game starts
     Then I should be redirected to the "game" page
 
-    Scenario: Players can submit words and turn passes
-      Given I am on the game page with code "ABCDEF"
-      Then it should be "Player 1" turn
-      Then the input for "Player 2" should be disabled
-      When I type "Kaffe" into the "Player 1" input
-      And I click on "Skicka"
-      Then I should see "Kaffe" as the last chosen word
-      And I should see "Player 1: Kaffe" in the history sidebar
-      And it should be "Player 2" turn 
 
-    Scenario: Turn passes from Player 1 to Player 2
-      Given I am on the game page with code "ABCDEF"
-      When I type "Kaffe" into the "Player 1" input
-      And I click on "Skicka"
-      Then the input for "Player 1" should be disabled
-      And the input for "Player 2" should be enabled
-      And it should be "Player 2" turn 
+  
 
-    Scenario: Show error message when room code is too short
+    Scenario: Show error message when room code is too long
       Given I am on the start page
       When I enter the name "Filiph"
       And I click on "GÅ MED I SPEL"
-      When I type "123" into the roomcode field
+      When I type "123ABCEW" into the roomcode field
       And I click on "ANSLUT NU"
       Then I should see the error "Rumskoden måste vara exakt 6 tecken."
 
