@@ -42,7 +42,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Scan npm dependencies
         run: npm audit --audit-level=high --omit=dev
@@ -126,7 +126,7 @@ jobs:
             ${{ runner.os }}-nuget-
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Start backend on port 5001
         run: |
@@ -176,7 +176,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
